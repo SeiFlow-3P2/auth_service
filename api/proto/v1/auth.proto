@@ -16,7 +16,6 @@ service AuthService {
         };
     }
 
-
     rpc Login(LoginRequest) returns (LoginResponse) {
         option (google.api.http) = {
             post: "/v1/auth/login"
@@ -47,6 +46,14 @@ service AuthService {
     rpc HealthCheck(google.protobuf.Empty) returns (HealthCheckResponse) {
         option (google.api.http) = {
             get: "/v1/auth/health"
+        };
+    }
+    
+    // Новый gRPC метод для валидации токена
+    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {
+        option (google.api.http) = {
+            post: "/v1/auth/validate"
+            body: "*"
         };
     }
 }
@@ -134,7 +141,17 @@ message GetUserInfoResponse {
     UserInfo user = 1;
 }
 
-
 message HealthCheckResponse {
     string status = 1; // Пример: "SERVING"
+}
+
+// Новые сообщения для валидации токена
+message ValidateTokenRequest {
+    string access_token = 1;
+}
+
+message ValidateTokenResponse {
+    bool valid = 1;
+    string user_id = 2;
+    string message = 3;
 }
