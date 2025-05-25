@@ -1,0 +1,157 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+package auth_v1;
+
+option go_package = "auth_service/pkg/proto/auth/v1;auth_v1";
+
+service AuthService {
+    rpc SignUp(SignUpRequest) returns (SignUpResponse) {
+        option (google.api.http) = {
+            post: "/v1/auth/signup"
+            body: "*"
+        };
+    }
+
+    rpc Login(LoginRequest) returns (LoginResponse) {
+        option (google.api.http) = {
+            post: "/v1/auth/login"
+            body: "*"
+        };
+    }
+
+    rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {
+        option (google.api.http) = {
+            post: "/v1/auth/refresh"
+            body: "*"
+        };
+    }
+
+    rpc Logout(LogoutRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/v1/auth/logout"
+            body: "*"
+        };
+    }
+
+    rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse) {
+        option (google.api.http) = {
+            get: "/v1/auth/users/{user_id}"
+        };
+    }
+
+    rpc HealthCheck(google.protobuf.Empty) returns (HealthCheckResponse) {
+        option (google.api.http) = {
+            get: "/v1/auth/health"
+        };
+    }
+    
+    // Новый gRPC метод для валидации токена
+    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {
+        option (google.api.http) = {
+            post: "/v1/auth/validate"
+            body: "*"
+        };
+    }
+}
+
+message SignUpRequest {
+    oneof sign_up_method {
+        EmailSignUp email = 1;
+        OAuthSignUp oauth = 2;
+    }
+}
+
+message EmailSignUp {
+    string email = 1;
+    string username = 2;
+    string password = 3;
+    google.protobuf.StringValue telegram_id = 4; // опционально
+}
+
+message OAuthSignUp {
+    string provider = 1;   // Пример: "google", "github"
+    string oauth_token = 2;
+    google.protobuf.StringValue telegram_id = 3; // опционально
+}
+
+message SignUpResponse {
+    string user_id = 1;
+    string access_token = 2;
+    string refresh_token = 3;
+    string message = 4;
+}
+
+message LoginRequest {
+    oneof login_method {
+        EmailLogin email = 1;
+        OAuthLogin oauth = 2;
+    }
+}
+
+message EmailLogin {
+    string email = 1;
+    string password = 2;
+}
+
+message OAuthLogin {
+    string provider = 1;
+    string oauth_token = 2;
+}
+
+message LoginResponse {
+    string user_id = 1;
+    string access_token = 2;
+    string refresh_token = 3;
+    string message = 4;
+}
+
+message RefreshTokenRequest {
+    string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message LogoutRequest {
+    string refresh_token = 1;
+}
+
+message GetUserInfoRequest {
+    string user_id = 1;
+}
+
+message UserInfo {
+    string id = 1;
+    google.protobuf.StringValue telegram_id = 2;
+    string username = 3;
+    string email = 4;
+    google.protobuf.StringValue photo_url = 5;
+    bool subscription = 6; // Наличие платной подписки
+    string created_at = 7;
+    string updated_at = 8;
+}
+
+message GetUserInfoResponse {
+    UserInfo user = 1;
+}
+
+message HealthCheckResponse {
+    string status = 1; // Пример: "SERVING"
+}
+
+// Новые сообщения для валидации токена
+message ValidateTokenRequest {
+    string access_token = 1;
+}
+
+message ValidateTokenResponse {
+    bool valid = 1;
+    string user_id = 2;
+    string message = 3;
+}
