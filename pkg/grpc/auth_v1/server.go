@@ -5,6 +5,7 @@ import (
 	authv1 "github.com/SeiFlow-3P2/auth_service/pkg/proto/v1"
 	verfic "github.com/SeiFlow-3P2/auth_service/pkg/utils/verifications"
 	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,27 +22,27 @@ type Auth interface {
 		email string,
 		password string,
 		telegramID string,
-	) (userID string, accessToken string, refreshToken string, message string, err error)
+	) (userID uuid.UUID, accessToken string, refreshToken string, message string, err error)
 
 	SingUpByOauth(
 		ctx context.Context,
 		provider string,
 		oauthToken string,
 		telegramID string,
-	) (userID string, accessToken string, refreshToken string, message string, err error)
+	) (userID uuid.UUID, accessToken string, refreshToken string, message string, err error)
 
 	LoginByEmail(
 		ctx context.Context,
 		email string,
 		password string,
 		telegramID string,
-	) (userID string, accessToken string, refreshToken string, message string, err error)
+	) (userID uuid.UUID, accessToken string, refreshToken string, message string, err error)
 
 	LoginByOauth(
 		ctx context.Context,
 		provider string,
 		oauthToken string,
-	) (userID string, accessToken string, refreshToken string, message string, err error)
+	) (userID uuid.UUID, accessToken string, refreshToken string, message string, err error)
 
 	RefreshToken(
 		ctx context.Context,
@@ -50,7 +51,7 @@ type Auth interface {
 
 	Logout(ctx context.Context,
 		RefreshToken string)
-	GetUserInfo(ctx context.Context, userID string) (
+	GetUserInfo(ctx context.Context, userID uuid.UUID) (
 		id string,
 		telegramId string,
 		username string,
@@ -82,14 +83,14 @@ func (s *serverAPI) SignUp(ctx context.Context, in *authv1.SignUpRequest) (*auth
 		if err != nil {
 			return nil, status.Error(codes.Internal, "failed to sing up")
 		}
-		return &authv1.SignUpResponse{UserId: userID, AccessToken: accessToken, RefreshToken: refreshToken, Message: message}, nil
+		return &authv1.SignUpResponse{UserId: userID.String(), AccessToken: accessToken, RefreshToken: refreshToken, Message: message}, nil
 
 	} else if oAuth != nil {
 		userID, accessToken, refreshToken, message, err := s.auth.SingUpByOauth(ctx, oAuth.Provider, oAuth.OauthToken, oAuth.TelegramId.Value)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "failed to sing up")
 		}
-		return &authv1.SignUpResponse{UserId: userID, AccessToken: accessToken, RefreshToken: refreshToken, Message: message}, nil
+		return &authv1.SignUpResponse{UserId: userID.String(), AccessToken: accessToken, RefreshToken: refreshToken, Message: message}, nil
 	} else {
 		return nil, status.Error(codes.InvalidArgument, "invalid auth")
 	}
@@ -103,7 +104,11 @@ func (s *serverAPI) GetUserInfo(
 	if in.UserId == "" {
 		return nil, status.Error(codes.InvalidArgument, "No user id")
 	}
-	id, telegramId, username, email, photoUrl, subscription, createdAt, updatedAt, err := s.auth.GetUserInfo(ctx, in.UserId)
+	userID, err := uuid.Parse(in.UserId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id")
+	}
+	id, telegramId, username, email, photoUrl, subscription, createdAt, updatedAt, err := s.auth.GetUserInfo(ctx, userID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to get user info")
 	}

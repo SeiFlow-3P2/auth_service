@@ -1,4 +1,4 @@
-package redis
+package authRedis
 
 import (
 	"context"
