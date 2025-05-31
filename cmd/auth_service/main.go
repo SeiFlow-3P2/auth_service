@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	configPath = "какой то путь"
+	configPath = "../../.env" //читается в /internal/app/app.go  !!!!
 	port       = 8080
 )
 
