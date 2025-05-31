@@ -20,13 +20,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthService_SignUp_FullMethodName        = "/auth_v1.AuthService/SignUp"
-	AuthService_Login_FullMethodName         = "/auth_v1.AuthService/Login"
-	AuthService_RefreshToken_FullMethodName  = "/auth_v1.AuthService/RefreshToken"
-	AuthService_Logout_FullMethodName        = "/auth_v1.AuthService/Logout"
-	AuthService_GetUserInfo_FullMethodName   = "/auth_v1.AuthService/GetUserInfo"
-	AuthService_HealthCheck_FullMethodName   = "/auth_v1.AuthService/HealthCheck"
-	AuthService_ValidateToken_FullMethodName = "/auth_v1.AuthService/ValidateToken"
+	AuthService_SignUp_FullMethodName       = "/auth_v1.AuthService/SignUp"
+	AuthService_Login_FullMethodName        = "/auth_v1.AuthService/Login"
+	AuthService_RefreshToken_FullMethodName = "/auth_v1.AuthService/RefreshToken"
+	AuthService_Logout_FullMethodName       = "/auth_v1.AuthService/Logout"
+	AuthService_GetUserInfo_FullMethodName  = "/auth_v1.AuthService/GetUserInfo"
+	AuthService_HealthCheck_FullMethodName  = "/auth_v1.AuthService/HealthCheck"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -39,8 +38,6 @@ type AuthServiceClient interface {
 	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error)
 	HealthCheck(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthCheckResponse, error)
-	// Новый gRPC метод для валидации токена
-	ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*ValidateTokenResponse, error)
 }
 
 type authServiceClient struct {
@@ -111,16 +108,6 @@ func (c *authServiceClient) HealthCheck(ctx context.Context, in *emptypb.Empty, 
 	return out, nil
 }
 
-func (c *authServiceClient) ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*ValidateTokenResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ValidateTokenResponse)
-	err := c.cc.Invoke(ctx, AuthService_ValidateToken_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
@@ -131,8 +118,6 @@ type AuthServiceServer interface {
 	Logout(context.Context, *LogoutRequest) (*emptypb.Empty, error)
 	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
 	HealthCheck(context.Context, *emptypb.Empty) (*HealthCheckResponse, error)
-	// Новый gRPC метод для валидации токена
-	ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -160,9 +145,6 @@ func (UnimplementedAuthServiceServer) GetUserInfo(context.Context, *GetUserInfoR
 }
 func (UnimplementedAuthServiceServer) HealthCheck(context.Context, *emptypb.Empty) (*HealthCheckResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HealthCheck not implemented")
-}
-func (UnimplementedAuthServiceServer) ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ValidateToken not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -293,24 +275,6 @@ func _AuthService_HealthCheck_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_ValidateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ValidateTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).ValidateToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AuthService_ValidateToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).ValidateToken(ctx, req.(*ValidateTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -341,10 +305,6 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "HealthCheck",
 			Handler:    _AuthService_HealthCheck_Handler,
-		},
-		{
-			MethodName: "ValidateToken",
-			Handler:    _AuthService_ValidateToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

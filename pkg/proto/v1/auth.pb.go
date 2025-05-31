@@ -654,7 +654,7 @@ func (x *RefreshTokenResponse) GetRefreshToken() string {
 
 type LogoutRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -689,9 +689,9 @@ func (*LogoutRequest) Descriptor() ([]byte, []int) {
 	return file_auth_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *LogoutRequest) GetRefreshToken() string {
+func (x *LogoutRequest) GetUserId() string {
 	if x != nil {
-		return x.RefreshToken
+		return x.UserId
 	}
 	return ""
 }
@@ -747,7 +747,6 @@ type UserInfo struct {
 	Username      string                  `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
 	Email         string                  `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
 	PhotoUrl      *wrapperspb.StringValue `protobuf:"bytes,5,opt,name=photo_url,json=photoUrl,proto3" json:"photo_url,omitempty"`
-	Subscription  bool                    `protobuf:"varint,6,opt,name=subscription,proto3" json:"subscription,omitempty"` // Наличие платной подписки
 	CreatedAt     string                  `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     string                  `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -817,13 +816,6 @@ func (x *UserInfo) GetPhotoUrl() *wrapperspb.StringValue {
 		return x.PhotoUrl
 	}
 	return nil
-}
-
-func (x *UserInfo) GetSubscription() bool {
-	if x != nil {
-		return x.Subscription
-	}
-	return false
 }
 
 func (x *UserInfo) GetCreatedAt() string {
@@ -928,111 +920,6 @@ func (x *HealthCheckResponse) GetStatus() string {
 	return ""
 }
 
-// Новые сообщения для валидации токена
-type ValidateTokenRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ValidateTokenRequest) Reset() {
-	*x = ValidateTokenRequest{}
-	mi := &file_auth_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ValidateTokenRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ValidateTokenRequest) ProtoMessage() {}
-
-func (x *ValidateTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ValidateTokenRequest.ProtoReflect.Descriptor instead.
-func (*ValidateTokenRequest) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *ValidateTokenRequest) GetAccessToken() string {
-	if x != nil {
-		return x.AccessToken
-	}
-	return ""
-}
-
-type ValidateTokenResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Valid         bool                   `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
-	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ValidateTokenResponse) Reset() {
-	*x = ValidateTokenResponse{}
-	mi := &file_auth_proto_msgTypes[16]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ValidateTokenResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ValidateTokenResponse) ProtoMessage() {}
-
-func (x *ValidateTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_auth_proto_msgTypes[16]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ValidateTokenResponse.ProtoReflect.Descriptor instead.
-func (*ValidateTokenResponse) Descriptor() ([]byte, []int) {
-	return file_auth_proto_rawDescGZIP(), []int{16}
-}
-
-func (x *ValidateTokenResponse) GetValid() bool {
-	if x != nil {
-		return x.Valid
-	}
-	return false
-}
-
-func (x *ValidateTokenResponse) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *ValidateTokenResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
 var File_auth_proto protoreflect.FileDescriptor
 
 const file_auth_proto_rawDesc = "" +
@@ -1082,19 +969,18 @@ const file_auth_proto_rawDesc = "" +
 	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"^\n" +
 	"\x14RefreshTokenResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"4\n" +
-	"\rLogoutRequest\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"-\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"(\n" +
+	"\rLogoutRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"-\n" +
 	"\x12GetUserInfoRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"\xa8\x02\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"\x84\x02\n" +
 	"\bUserInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12=\n" +
 	"\vtelegram_id\x18\x02 \x01(\v2\x1c.google.protobuf.StringValueR\n" +
 	"telegramId\x12\x1a\n" +
 	"\busername\x18\x03 \x01(\tR\busername\x12\x14\n" +
 	"\x05email\x18\x04 \x01(\tR\x05email\x129\n" +
-	"\tphoto_url\x18\x05 \x01(\v2\x1c.google.protobuf.StringValueR\bphotoUrl\x12\"\n" +
-	"\fsubscription\x18\x06 \x01(\bR\fsubscription\x12\x1d\n" +
+	"\tphoto_url\x18\x05 \x01(\v2\x1c.google.protobuf.StringValueR\bphotoUrl\x12\x1d\n" +
 	"\n" +
 	"created_at\x18\a \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
@@ -1102,21 +988,14 @@ const file_auth_proto_rawDesc = "" +
 	"\x13GetUserInfoResponse\x12%\n" +
 	"\x04user\x18\x01 \x01(\v2\x11.auth_v1.UserInfoR\x04user\"-\n" +
 	"\x13HealthCheckResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\"9\n" +
-	"\x14ValidateTokenRequest\x12!\n" +
-	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\"`\n" +
-	"\x15ValidateTokenResponse\x12\x14\n" +
-	"\x05valid\x18\x01 \x01(\bR\x05valid\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage2\xaf\x05\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status2\xc1\x04\n" +
 	"\vAuthService\x12U\n" +
 	"\x06SignUp\x12\x16.auth_v1.SignUpRequest\x1a\x17.auth_v1.SignUpResponse\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/auth/signup\x12Q\n" +
 	"\x05Login\x12\x15.auth_v1.LoginRequest\x1a\x16.auth_v1.LoginResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v1/auth/login\x12h\n" +
 	"\fRefreshToken\x12\x1c.auth_v1.RefreshTokenRequest\x1a\x1d.auth_v1.RefreshTokenResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/auth/refresh\x12T\n" +
 	"\x06Logout\x12\x16.auth_v1.LogoutRequest\x1a\x16.google.protobuf.Empty\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/auth/logout\x12j\n" +
 	"\vGetUserInfo\x12\x1b.auth_v1.GetUserInfoRequest\x1a\x1c.auth_v1.GetUserInfoResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v1/auth/users/{user_id}\x12\\\n" +
-	"\vHealthCheck\x12\x16.google.protobuf.Empty\x1a\x1c.auth_v1.HealthCheckResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/auth/health\x12l\n" +
-	"\rValidateToken\x12\x1d.auth_v1.ValidateTokenRequest\x1a\x1e.auth_v1.ValidateTokenResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v1/auth/validateB(Z&auth_service/pkg/proto/auth/v1;auth_v1b\x06proto3"
+	"\vHealthCheck\x12\x16.google.protobuf.Empty\x1a\x1c.auth_v1.HealthCheckResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/auth/healthB(Z&auth_service/pkg/proto/auth/v1;auth_v1b\x06proto3"
 
 var (
 	file_auth_proto_rawDescOnce sync.Once
@@ -1130,7 +1009,7 @@ func file_auth_proto_rawDescGZIP() []byte {
 	return file_auth_proto_rawDescData
 }
 
-var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_auth_proto_goTypes = []any{
 	(*SignUpRequest)(nil),          // 0: auth_v1.SignUpRequest
 	(*EmailSignUp)(nil),            // 1: auth_v1.EmailSignUp
@@ -1147,37 +1026,33 @@ var file_auth_proto_goTypes = []any{
 	(*UserInfo)(nil),               // 12: auth_v1.UserInfo
 	(*GetUserInfoResponse)(nil),    // 13: auth_v1.GetUserInfoResponse
 	(*HealthCheckResponse)(nil),    // 14: auth_v1.HealthCheckResponse
-	(*ValidateTokenRequest)(nil),   // 15: auth_v1.ValidateTokenRequest
-	(*ValidateTokenResponse)(nil),  // 16: auth_v1.ValidateTokenResponse
-	(*wrapperspb.StringValue)(nil), // 17: google.protobuf.StringValue
-	(*emptypb.Empty)(nil),          // 18: google.protobuf.Empty
+	(*wrapperspb.StringValue)(nil), // 15: google.protobuf.StringValue
+	(*emptypb.Empty)(nil),          // 16: google.protobuf.Empty
 }
 var file_auth_proto_depIdxs = []int32{
 	1,  // 0: auth_v1.SignUpRequest.email:type_name -> auth_v1.EmailSignUp
 	2,  // 1: auth_v1.SignUpRequest.oauth:type_name -> auth_v1.OAuthSignUp
-	17, // 2: auth_v1.EmailSignUp.telegram_id:type_name -> google.protobuf.StringValue
-	17, // 3: auth_v1.OAuthSignUp.telegram_id:type_name -> google.protobuf.StringValue
+	15, // 2: auth_v1.EmailSignUp.telegram_id:type_name -> google.protobuf.StringValue
+	15, // 3: auth_v1.OAuthSignUp.telegram_id:type_name -> google.protobuf.StringValue
 	5,  // 4: auth_v1.LoginRequest.email:type_name -> auth_v1.EmailLogin
 	6,  // 5: auth_v1.LoginRequest.oauth:type_name -> auth_v1.OAuthLogin
-	17, // 6: auth_v1.UserInfo.telegram_id:type_name -> google.protobuf.StringValue
-	17, // 7: auth_v1.UserInfo.photo_url:type_name -> google.protobuf.StringValue
+	15, // 6: auth_v1.UserInfo.telegram_id:type_name -> google.protobuf.StringValue
+	15, // 7: auth_v1.UserInfo.photo_url:type_name -> google.protobuf.StringValue
 	12, // 8: auth_v1.GetUserInfoResponse.user:type_name -> auth_v1.UserInfo
 	0,  // 9: auth_v1.AuthService.SignUp:input_type -> auth_v1.SignUpRequest
 	4,  // 10: auth_v1.AuthService.Login:input_type -> auth_v1.LoginRequest
 	8,  // 11: auth_v1.AuthService.RefreshToken:input_type -> auth_v1.RefreshTokenRequest
 	10, // 12: auth_v1.AuthService.Logout:input_type -> auth_v1.LogoutRequest
 	11, // 13: auth_v1.AuthService.GetUserInfo:input_type -> auth_v1.GetUserInfoRequest
-	18, // 14: auth_v1.AuthService.HealthCheck:input_type -> google.protobuf.Empty
-	15, // 15: auth_v1.AuthService.ValidateToken:input_type -> auth_v1.ValidateTokenRequest
-	3,  // 16: auth_v1.AuthService.SignUp:output_type -> auth_v1.SignUpResponse
-	7,  // 17: auth_v1.AuthService.Login:output_type -> auth_v1.LoginResponse
-	9,  // 18: auth_v1.AuthService.RefreshToken:output_type -> auth_v1.RefreshTokenResponse
-	18, // 19: auth_v1.AuthService.Logout:output_type -> google.protobuf.Empty
-	13, // 20: auth_v1.AuthService.GetUserInfo:output_type -> auth_v1.GetUserInfoResponse
-	14, // 21: auth_v1.AuthService.HealthCheck:output_type -> auth_v1.HealthCheckResponse
-	16, // 22: auth_v1.AuthService.ValidateToken:output_type -> auth_v1.ValidateTokenResponse
-	16, // [16:23] is the sub-list for method output_type
-	9,  // [9:16] is the sub-list for method input_type
+	16, // 14: auth_v1.AuthService.HealthCheck:input_type -> google.protobuf.Empty
+	3,  // 15: auth_v1.AuthService.SignUp:output_type -> auth_v1.SignUpResponse
+	7,  // 16: auth_v1.AuthService.Login:output_type -> auth_v1.LoginResponse
+	9,  // 17: auth_v1.AuthService.RefreshToken:output_type -> auth_v1.RefreshTokenResponse
+	16, // 18: auth_v1.AuthService.Logout:output_type -> google.protobuf.Empty
+	13, // 19: auth_v1.AuthService.GetUserInfo:output_type -> auth_v1.GetUserInfoResponse
+	14, // 20: auth_v1.AuthService.HealthCheck:output_type -> auth_v1.HealthCheckResponse
+	15, // [15:21] is the sub-list for method output_type
+	9,  // [9:15] is the sub-list for method input_type
 	9,  // [9:9] is the sub-list for extension type_name
 	9,  // [9:9] is the sub-list for extension extendee
 	0,  // [0:9] is the sub-list for field type_name
@@ -1202,7 +1077,7 @@ func file_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_proto_rawDesc), len(file_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
