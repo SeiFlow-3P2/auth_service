@@ -1,4 +1,4 @@
-package slog
+package authSlog
 
 import (
 	"log/slog"

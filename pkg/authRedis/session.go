@@ -13,19 +13,19 @@ const (
 )
 
 // SetSession sets refresh token and pass hash
-func (r *Casher) SetSession(ctx context.Context, userID string, refreshToken string, passHash []byte) error {
+func (r *Casher) SetSession(ctx context.Context, userEmail string, refreshToken string, passHash []byte) error {
 
-	setRef := r.Client.HSet(userID, refreshField, refreshToken)
+	setRef := r.Client.HSet(userEmail, refreshField, refreshToken)
 	if setRef.Err() != nil {
 		return setRef.Err()
 	}
 
-	setPass := r.Client.HSet(userID, passField, passHash)
+	setPass := r.Client.HSet(userEmail, passField, passHash)
 	if setPass.Err() != nil {
 		return setPass.Err()
 	}
 
-	exp := r.Client.Expire(userID, r.RefreshTTL)
+	exp := r.Client.Expire(userEmail, r.RefreshTTL)
 	if exp.Err() != nil {
 		return exp.Err()
 
@@ -34,10 +34,10 @@ func (r *Casher) SetSession(ctx context.Context, userID string, refreshToken str
 }
 
 // UserRefresh returns refresh token
-func (r *Casher) UserRefresh(ctx context.Context, userID string) (string, error) {
+func (r *Casher) UserRefresh(ctx context.Context, userEmail string) (string, error) {
 	var result string
 
-	err := r.Client.HGet(userID, refreshField).Scan(&result)
+	err := r.Client.HGet(userEmail, refreshField).Scan(&result)
 
 	if err != nil {
 		return "", err
@@ -47,10 +47,10 @@ func (r *Casher) UserRefresh(ctx context.Context, userID string) (string, error)
 }
 
 // UserPassHash returns pass hash
-func (r *Casher) UserPassHash(ctx context.Context, userID string) (string, error) {
+func (r *Casher) UserPassHash(ctx context.Context, userEmail string) (string, error) {
 	var result string
 
-	err := r.Client.HGet(userID, passField).Scan(&result)
+	err := r.Client.HGet(userEmail, passField).Scan(&result)
 
 	if err != nil {
 		return "", err
@@ -60,9 +60,9 @@ func (r *Casher) UserPassHash(ctx context.Context, userID string) (string, error
 }
 
 // BlockSession deletes user from casher
-func (r *Casher) BlockSession(ctx context.Context, userID string) error {
+func (r *Casher) BlockSession(ctx context.Context, userEmail string) error {
 
-	err := r.Client.HDel(userID).Err()
+	err := r.Client.HDel(userEmail).Err()
 
 	if err != nil {
 		return err
@@ -71,8 +71,8 @@ func (r *Casher) BlockSession(ctx context.Context, userID string) error {
 }
 
 // UserSession returns refresh token and pass hash
-func (r *Casher) UserSession(ctx context.Context, userID string) (string, string, error) {
-	result, err := r.Client.HGetAll(userID).Result()
+func (r *Casher) UserSession(ctx context.Context, userEmail string) (string, string, error) {
+	result, err := r.Client.HGetAll(userEmail).Result()
 	if err != nil {
 		return "", "", err
 	}

@@ -13,7 +13,7 @@ type AuthOrm struct {
 }
 
 // CreateUser creates new user in database
-func (d *AuthOrm) CreateUser(name string, email string, photoUrl string, telegramId uint, subscription bool, password []byte) error {
+func (d *AuthOrm) CreateUser(name string, email string, photoUrl string, telegramId uint, password []byte) error {
 	user := domain.User{
 		Username:     name,
 		Email:        email,
@@ -72,8 +72,14 @@ func (d *AuthOrm) ChangeTelegramId(userId uuid.UUID, telegramId uint) error {
 	return nil
 }
 
+func (d *AuthOrm) GetUserByEmail(email string) (*domain.User, error) {
+	var user domain.User
+	err := d.First(&user, email).Error
+	return &user, err
+}
+
 // GetUser returns user by id
-func (d *AuthOrm) GetUser(userId uint) (*domain.User, error) {
+func (d *AuthOrm) GetUser(userId uuid.UUID) (*domain.User, error) {
 	var user domain.User
 	err := d.First(&user, userId).Error
 	return &user, err
@@ -85,4 +91,9 @@ func (d *AuthOrm) Ping() error {
 		return err
 	}
 	return db.Ping()
+}
+
+func (d *AuthOrm) MigrateDB() error {
+	err := d.AutoMigrate(&domain.User{})
+	return err
 }

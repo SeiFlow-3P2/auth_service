@@ -15,3 +15,11 @@ type User struct {
 	TelegramId   uint      `authOrm:"size:11"`
 	PasswordHash []byte
 }
+
+type UserInfo struct {
+	ID        string
+	Name      string
+	Email     string
+	AvatarURL string
+	Provider  string
+}

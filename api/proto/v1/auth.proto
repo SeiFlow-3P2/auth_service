@@ -48,14 +48,6 @@ service AuthService {
             get: "/v1/auth/health"
         };
     }
-    
-    // Новый gRPC метод для валидации токена
-    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {
-        option (google.api.http) = {
-            post: "/v1/auth/validate"
-            body: "*"
-        };
-    }
 }
 
 message SignUpRequest {
@@ -119,7 +111,7 @@ message RefreshTokenResponse {
 }
 
 message LogoutRequest {
-    string refresh_token = 1;
+    string user_id = 1;
 }
 
 message GetUserInfoRequest {
@@ -132,7 +124,6 @@ message UserInfo {
     string username = 3;
     string email = 4;
     google.protobuf.StringValue photo_url = 5;
-    bool subscription = 6; // Наличие платной подписки
     string created_at = 7;
     string updated_at = 8;
 }
@@ -145,13 +136,3 @@ message HealthCheckResponse {
     string status = 1; // Пример: "SERVING"
 }
 
-// Новые сообщения для валидации токена
-message ValidateTokenRequest {
-    string access_token = 1;
-}
-
-message ValidateTokenResponse {
-    bool valid = 1;
-    string user_id = 2;
-    string message = 3;
-}
