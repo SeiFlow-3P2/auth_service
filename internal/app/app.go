@@ -121,7 +121,7 @@ type App struct {
 	port       int
 }
 
-// New creates new gRPC server app.
+// NewGRPCApp creates new gRPC server app.
 func NewGRPCApp(
 	log *slog.Logger,
 	authService auth_v1.Auth,

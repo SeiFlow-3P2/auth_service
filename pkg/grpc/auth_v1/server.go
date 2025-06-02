@@ -60,7 +60,7 @@ type Auth interface {
 func Register(gRPCServer *grpc.Server, auth Auth) {
 	authv1.RegisterAuthServiceServer(gRPCServer, &serverAPI{auth: auth})
 }
-func (s *serverAPI) logout(ctx context.Context, in *authv1.LogoutRequest) (*emptypb.Empty, error) {
+func (s *serverAPI) Logout(ctx context.Context, in *authv1.LogoutRequest) (*emptypb.Empty, error) {
 	userId, err := uuid.Parse(in.GetUserId()) //TODO Дождаться обновления протофайла и сравнить, работает ли?
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid user id")
@@ -73,13 +73,13 @@ func (s *serverAPI) logout(ctx context.Context, in *authv1.LogoutRequest) (*empt
 
 	return &emptypb.Empty{}, nil
 }
-func (s *serverAPI) refreshToken(ctx context.Context, in *authv1.RefreshTokenRequest) (*authv1.RefreshTokenResponse, error) {
+func (s *serverAPI) RefreshToken(ctx context.Context, in *authv1.RefreshTokenRequest) (*authv1.RefreshTokenResponse, error) {
 	if in.GetRefreshToken() == "" {
 		return nil, status.Error(codes.InvalidArgument, "no refresh token")
 	}
 	accessToken, refreshToken, err := s.auth.RefreshToken(ctx, in.GetRefreshToken())
 	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to refresh token"+err.Error())
+		return nil, status.Error(codes.Internal, "failed to refresh token "+err.Error())
 	}
 	return &authv1.RefreshTokenResponse{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
@@ -102,7 +102,8 @@ func (s *serverAPI) Login(ctx context.Context, in *authv1.LoginRequest) (*authv1
 		if err != nil {
 			return nil, status.Error(codes.Internal, "failed to login")
 		}
-		return &authv1.LoginResponse{UserId: userID.String(), AccessToken: accessToken, RefreshToken: refreshToken, Message: message}, nil
+		usrID := userID.String()
+		return &authv1.LoginResponse{UserId: usrID, AccessToken: accessToken, RefreshToken: refreshToken, Message: message}, nil
 	}
 	return nil, status.Error(codes.InvalidArgument, "invalid auth")
 }
@@ -119,7 +120,22 @@ func (s *serverAPI) SignUp(ctx context.Context, in *authv1.SignUpRequest) (*auth
 		if emailAuth.Password == "" {
 			return nil, status.Error(codes.InvalidArgument, "No password")
 		}
-		userID, accessToken, refreshToken, message, err := s.auth.SingUpByEmail(ctx, emailAuth.Username, emailAuth.Email, emailAuth.Password, emailAuth.TelegramId.Value)
+
+		password := []byte(emailAuth.Password)
+
+		var telegramID uint
+
+		if emailAuth.TelegramId != nil {
+			telegramIDInt, err := strconv.Atoi(emailAuth.TelegramId.Value)
+			if err != nil {
+				telegramID = uint(0)
+			}
+			telegramID = uint(telegramIDInt)
+		} else {
+			telegramID = uint(0)
+		}
+
+		userID, accessToken, refreshToken, message, err := s.auth.SingUpByEmail(ctx, emailAuth.Username, emailAuth.Email, password, telegramID)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "failed to sing up")
 		}
@@ -152,7 +168,7 @@ func (s *serverAPI) GetUserInfo(
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to get user info")
 	}
-	return &authv1.GetUserInfoResponse{User: &authv1.UserInfo{Id: id, TelegramId: &wrappers.StringValue{Value: strconv.Itoa(int(telegramId))}, Subscription: false, Username: username, Email: email,
+	return &authv1.GetUserInfoResponse{User: &authv1.UserInfo{Id: id, TelegramId: &wrappers.StringValue{Value: strconv.Itoa(int(telegramId))}, Username: username, Email: email,
 		PhotoUrl:  &wrappers.StringValue{Value: photoUrl},
 		CreatedAt: createdAt, UpdatedAt: updatedAt},
 	}, nil
