@@ -1,0 +1,326 @@
+package auth
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+)
+
+// MockAuthService implements AuthServiceServer for testing
+type MockAuthService struct {
+	UnimplementedAuthServiceServer
+}
+
+func (m *MockAuthService) SignUp(ctx context.Context, req *SignUpRequest) (*SignUpResponse, error) {
+	if req.GetEmail() == nil && req.GetOauth() == nil {
+		return nil, errors.New("invalid signup method")
+	}
+
+	return &SignUpResponse{
+		UserId:        "test-user-id",
+		AccessToken:   "test-access-token",
+		RefreshToken:  "test-refresh-token",
+		Message:       "success",
+	}, nil
+}
+
+func (m *MockAuthService) Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error) {
+	if req.GetEmail() == nil && req.GetOauth() == nil {
+		return nil, errors.New("invalid login method")
+	}
+
+	return &LoginResponse{
+		UserId:        "test-user-id",
+		AccessToken:   "test-access-token",
+		RefreshToken:  "test-refresh-token",
+		Message:       "success",
+	}, nil
+}
+
+func (m *MockAuthService) RefreshToken(ctx context.Context, req *RefreshTokenRequest) (*RefreshTokenResponse, error) {
+	if req.RefreshToken == "" {
+		return nil, errors.New("refresh token required")
+	}
+
+	return &RefreshTokenResponse{
+		AccessToken:  "new-access-token",
+		RefreshToken: "new-refresh-token",
+	}, nil
+}
+
+func (m *MockAuthService) Logout(ctx context.Context, req *LogoutRequest) (*emptypb.Empty, error) {
+	if req.RefreshToken == "" {
+		return nil, errors.New("refresh token required")
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (m *MockAuthService) GetUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GetUserInfoResponse, error) {
+	if req.UserId == "" {
+		return nil, errors.New("user id required")
+	}
+
+	return &GetUserInfoResponse{
+		User: &UserInfo{
+			Id:          req.UserId,
+			Username:    "testuser",
+			Email:       "test@example.com",
+			TelegramId:  wrapperspb.String("12345"),
+			Subscription: false,
+		},
+	}, nil
+}
+
+func (m *MockAuthService) HealthCheck(ctx context.Context, req *emptypb.Empty) (*HealthCheckResponse, error) {
+	return &HealthCheckResponse{
+		Status: "SERVING",
+	}, nil
+}
+
+func (m *MockAuthService) ValidateToken(ctx context.Context, req *ValidateTokenRequest) (*ValidateTokenResponse, error) {
+	if req.AccessToken == "" {
+		return nil, errors.New("access token required")
+	}
+
+	return &ValidateTokenResponse{
+		Valid:   true,
+		UserId:  "test-user-id",
+		Message: "valid",
+	}, nil
+}
+
+// Tests
+func TestSignUp(t *testing.T) {
+	ctx := context.Background()
+	mock := &MockAuthService{}
+
+	t.Run("EmailSignUp", func(t *testing.T) {
+		req := &SignUpRequest{
+			SignUpMethod: &SignUpRequest_Email{
+				Email: &EmailSignUp{
+					Email:     "test@example.com",
+					Username:  "testuser",
+					Password:  "password",
+					TelegramId: wrapperspb.String("12345"),
+				},
+			},
+		}
+
+		resp, err := mock.SignUp(ctx, req)
+		if err != nil {
+			t.Fatalf("SignUp failed: %v", err)
+		}
+
+		if resp.UserId != "test-user-id" {
+			t.Errorf("Expected user ID 'test-user-id', got '%s'", resp.UserId)
+		}
+	})
+
+	t.Run("OAuthSignUp", func(t *testing.T) {
+		req := &SignUpRequest{
+			SignUpMethod: &SignUpRequest_Oauth{
+				Oauth: &OAuthSignUp{
+					Provider:   "google",
+					OauthToken: "token",
+					TelegramId: wrapperspb.String("12345"),
+				},
+			},
+		}
+
+		resp, err := mock.SignUp(ctx, req)
+		if err != nil {
+			t.Fatalf("SignUp failed: %v", err)
+		}
+
+		if resp.UserId != "test-user-id" {
+			t.Errorf("Expected user ID 'test-user-id', got '%s'", resp.UserId)
+		}
+	})
+
+	t.Run("InvalidSignUp", func(t *testing.T) {
+		req := &SignUpRequest{}
+		_, err := mock.SignUp(ctx, req)
+		if err == nil {
+			t.Error("Expected error for invalid signup request")
+		}
+	})
+}
+
+func TestLogin(t *testing.T) {
+	ctx := context.Background()
+	mock := &MockAuthService{}
+
+	t.Run("EmailLogin", func(t *testing.T) {
+		req := &LoginRequest{
+			LoginMethod: &LoginRequest_Email{
+				Email: &EmailLogin{
+					Email:    "test@example.com",
+					Password: "password",
+				},
+			},
+		}
+
+		resp, err := mock.Login(ctx, req)
+		if err != nil {
+			t.Fatalf("Login failed: %v", err)
+		}
+
+		if resp.UserId != "test-user-id" {
+			t.Errorf("Expected user ID 'test-user-id', got '%s'", resp.UserId)
+		}
+	})
+
+	t.Run("OAuthLogin", func(t *testing.T) {
+		req := &LoginRequest{
+			LoginMethod: &LoginRequest_Oauth{
+				Oauth: &OAuthLogin{
+					Provider:   "google",
+					OauthToken: "token",
+				},
+			},
+		}
+
+		resp, err := mock.Login(ctx, req)
+		if err != nil {
+			t.Fatalf("Login failed: %v", err)
+		}
+
+		if resp.UserId != "test-user-id" {
+			t.Errorf("Expected user ID 'test-user-id', got '%s'", resp.UserId)
+		}
+	})
+
+	t.Run("InvalidLogin", func(t *testing.T) {
+		req := &LoginRequest{}
+		_, err := mock.Login(ctx, req)
+		if err == nil {
+			t.Error("Expected error for invalid login request")
+		}
+	})
+}
+
+func TestRefreshToken(t *testing.T) {
+	ctx := context.Background()
+	mock := &MockAuthService{}
+
+	t.Run("ValidRefresh", func(t *testing.T) {
+		req := &RefreshTokenRequest{
+			RefreshToken: "refresh-token",
+		}
+
+		resp, err := mock.RefreshToken(ctx, req)
+		if err != nil {
+			t.Fatalf("RefreshToken failed: %v", err)
+		}
+
+		if resp.AccessToken != "new-access-token" {
+			t.Errorf("Expected new access token, got '%s'", resp.AccessToken)
+		}
+	})
+
+	t.Run("InvalidRefresh", func(t *testing.T) {
+		req := &RefreshTokenRequest{}
+		_, err := mock.RefreshToken(ctx, req)
+		if err == nil {
+			t.Error("Expected error for empty refresh token")
+		}
+	})
+}
+
+func TestLogout(t *testing.T) {
+	ctx := context.Background()
+	mock := &MockAuthService{}
+
+	t.Run("ValidLogout", func(t *testing.T) {
+		req := &LogoutRequest{
+			RefreshToken: "refresh-token",
+		}
+
+		_, err := mock.Logout(ctx, req)
+		if err != nil {
+			t.Fatalf("Logout failed: %v", err)
+		}
+	})
+
+	t.Run("InvalidLogout", func(t *testing.T) {
+		req := &LogoutRequest{}
+		_, err := mock.Logout(ctx, req)
+		if err == nil {
+			t.Error("Expected error for empty refresh token")
+		}
+	})
+}
+
+func TestGetUserInfo(t *testing.T) {
+	ctx := context.Background()
+	mock := &MockAuthService{}
+
+	t.Run("ValidRequest", func(t *testing.T) {
+		req := &GetUserInfoRequest{
+			UserId: "user-123",
+		}
+
+		resp, err := mock.GetUserInfo(ctx, req)
+		if err != nil {
+			t.Fatalf("GetUserInfo failed: %v", err)
+		}
+
+		if resp.User.Id != "user-123" {
+			t.Errorf("Expected user ID 'user-123', got '%s'", resp.User.Id)
+		}
+	})
+
+	t.Run("InvalidRequest", func(t *testing.T) {
+		req := &GetUserInfoRequest{}
+		_, err := mock.GetUserInfo(ctx, req)
+		if err == nil {
+			t.Error("Expected error for empty user ID")
+		}
+	})
+}
+
+func TestHealthCheck(t *testing.T) {
+	ctx := context.Background()
+	mock := &MockAuthService{}
+
+	resp, err := mock.HealthCheck(ctx, &emptypb.Empty{})
+	if err != nil {
+		t.Fatalf("HealthCheck failed: %v", err)
+	}
+
+	if resp.Status != "SERVING" {
+		t.Errorf("Expected status 'SERVING', got '%s'", resp.Status)
+	}
+}
+
+func TestValidateToken(t *testing.T) {
+	ctx := context.Background()
+	mock := &MockAuthService{}
+
+	t.Run("ValidToken", func(t *testing.T) {
+		req := &ValidateTokenRequest{
+			AccessToken: "valid-token",
+		}
+
+		resp, err := mock.ValidateToken(ctx, req)
+		if err != nil {
+			t.Fatalf("ValidateToken failed: %v", err)
+		}
+
+		if !resp.Valid {
+			t.Error("Expected token to be valid")
+		}
+	})
+
+	t.Run("InvalidToken", func(t *testing.T) {
+		req := &ValidateTokenRequest{}
+		_, err := mock.ValidateToken(ctx, req)
+		if err == nil {
+			t.Error("Expected error for empty token")
+		}
+	})
+}
