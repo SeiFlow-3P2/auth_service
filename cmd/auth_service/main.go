@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	configPath = "../../.env" //читается в /internal/app/app.go  !!!!
+	configPath = ".env" //читается в /internal/app/app.go  !!!!
 )
 
 func main() {
