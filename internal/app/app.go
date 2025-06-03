@@ -35,7 +35,7 @@ func NewApp(cfgPath string) *domain.App {
 	// Инициализация БД
 	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")
-	dbName := os.Getenv("DB_Name")
+	dbName := os.Getenv("DB_NAME")
 	dbPass := os.Getenv("DB_PASSWORD")
 	dbMode := os.Getenv("DB_SSLMODE")
 	dsn := fmt.Sprintf("host=%s user=%s dbname=%s password=%s sslmode=%s", dbHost, dbUser, dbName, dbPass, dbMode)
