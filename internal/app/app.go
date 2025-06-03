@@ -125,8 +125,17 @@ type App struct {
 func NewGRPCApp(
 	log *slog.Logger,
 	authService auth_v1.Auth,
-	port int,
+	cfgPath string,
 ) *App {
+	if err := godotenv.Load(cfgPath); err != nil {
+		panic(fmt.Sprintf("Error loading .env file: %v", err))
+	}
+
+	grpcPort, err := strconv.Atoi(os.Getenv("GRPC_PORT"))
+	if err != nil {
+		panic("cant parse grpc port")
+	}
+
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(
 			//logging.StartCall, logging.FinishCall,
@@ -153,7 +162,7 @@ func NewGRPCApp(
 	return &App{
 		log:        log,
 		gRPCServer: gRPCServer,
-		port:       port,
+		port:       grpcPort,
 	}
 }
 
