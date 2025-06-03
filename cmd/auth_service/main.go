@@ -8,7 +8,6 @@ import (
 
 const (
 	configPath = "../../.env" //читается в /internal/app/app.go  !!!!
-	port       = 8080
 )
 
 func main() {
@@ -18,7 +17,8 @@ func main() {
 	}
 
 	auth := service.Auth{authApp}
-	grpcServer := app.NewGRPCApp(slog.Default(), &auth, port)
+	grpcServer := app.NewGRPCApp(slog.Default(), &auth, configPath)
+
 	err := grpcServer.Run()
 	if err != nil {
 		panic(err)
