@@ -62,7 +62,7 @@ func (r *Casher) UserPassHash(ctx context.Context, userEmail string) (string, er
 // BlockSession deletes user from casher
 func (r *Casher) BlockSession(ctx context.Context, userEmail string) error {
 
-	err := r.Client.HDel(userEmail).Err()
+	err := r.Client.HDel(userEmail, refreshField, passField).Err()
 
 	if err != nil {
 		return err

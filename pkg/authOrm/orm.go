@@ -15,6 +15,7 @@ type AuthOrm struct {
 // CreateUser creates new user in database
 func (d *AuthOrm) CreateUser(name string, email string, photoUrl string, telegramId uint, password []byte) error {
 	user := domain.User{
+		ID:           uuid.New(),
 		Username:     name,
 		Email:        email,
 		PhotoUrl:     photoUrl,
@@ -74,14 +75,14 @@ func (d *AuthOrm) ChangeTelegramId(userId uuid.UUID, telegramId uint) error {
 
 func (d *AuthOrm) GetUserByEmail(email string) (*domain.User, error) {
 	var user domain.User
-	err := d.First(&user, email).Error
+	err := d.First(&user, "Email = ?", email).Error
 	return &user, err
 }
 
 // GetUser returns user by id
 func (d *AuthOrm) GetUser(userId uuid.UUID) (*domain.User, error) {
 	var user domain.User
-	err := d.First(&user, userId).Error
+	err := d.First(&user, "ID = ?", userId).Error
 	return &user, err
 }
 

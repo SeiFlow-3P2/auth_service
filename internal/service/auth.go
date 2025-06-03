@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"github.com/SeiFlow-3P2/auth_service/internal/domain"
 	"github.com/SeiFlow-3P2/auth_service/pkg/authJWT"
@@ -40,6 +41,8 @@ func (a *Auth) LoginByEmail(ctx context.Context, email string, password []byte) 
 			return uuid.Nil, "", "", "", err
 		}
 
+		err = a.Casher.SetSession(ctx, user.Email, tokens.RefreshToken, user.PasswordHash)
+
 		return user.ID, tokens.AccessToken, tokens.RefreshToken, "", err
 	}
 
@@ -51,12 +54,19 @@ func (a *Auth) LoginByEmail(ctx context.Context, email string, password []byte) 
 		return uuid.Nil, "", "", "", errors.New("invalid password")
 	}
 
-	accessToken, refreshToken, err = a.RefreshToken(ctx, refreshToken)
+	user, err := a.AuthDB.GetUserByEmail(email)
+
+	if err != nil {
+
+		return uuid.Nil, "", "", "", err
+	}
+
+	tokens, err := authJWT.CreateTokenPair(ctx, *user, a.Settings)
 
 	if err != nil {
 		return uuid.Nil, "", "", "", err
 	}
-	return userID, accessToken, refreshToken, "", err
+	return user.ID, tokens.AccessToken, tokens.RefreshToken, "", err
 
 }
 
@@ -66,22 +76,25 @@ func (a *Auth) LoginByOauth(ctx context.Context, provider string, oauthToken str
 }
 
 func (a *Auth) RefreshToken(ctx context.Context, RefreshToken string) (accessToken string, refreshToken string, err error) {
-
+	op := "Auth_Service_RefreshToken: "
 	refToken, err := jwt.Parse(RefreshToken,
-		func(refToken *jwt.Token) (interface{}, error) {
-			tokenChecked, err := refToken.SignedString(a.Settings.Secret)
+		func(token *jwt.Token) (interface{}, error) {
+			secret, err := base64.StdEncoding.DecodeString(a.Settings.Secret)
 			if err != nil {
+				a.Logger.Info(op + err.Error())
 				return nil, err
 			}
-			return tokenChecked, nil
+			return secret, nil
 		})
 
 	if err != nil {
+		a.Logger.Error(op, slog.String(op, err.Error()))
 		return "", "", err
 
 	}
 	claims, ok := refToken.Claims.(jwt.MapClaims)
 	if ok != true {
+		a.Logger.Error(op, slog.String(op, "cant get claims"))
 		return "", "", errors.New("invalid token")
 	}
 
@@ -90,26 +103,45 @@ func (a *Auth) RefreshToken(ctx context.Context, RefreshToken string) (accessTok
 		return "", "", errors.New("token expired")
 	}
 
-	userID, err := uuid.Parse(claims["id"].(string))
+	email := claims["email"].(string)
 
-	user, err := a.AuthDB.GetUser(userID)
-	if err != nil || user == nil {
-		return "", "", err
-	}
+	refreshToken, _, err = a.Casher.UserSession(ctx, email)
 
-	tokens, err := authJWT.CreateTokenPair(ctx, *user, a.Settings)
 	if err != nil {
 		return "", "", err
 	}
-	err = a.Casher.BlockSession(ctx, user.Email)
+	if refreshToken == "" {
+		return "", "", errors.New("invalid token")
+	}
+	if refreshToken != RefreshToken {
+		return "", "", errors.New("invalid token")
+	}
 
+	user, err := a.AuthDB.GetUserByEmail(email)
+
+	if err != nil {
+		return "", "", err
+	}
+	tokens, err := authJWT.CreateTokenPair(ctx, *user, a.Settings)
+	if err != nil {
+		a.Logger.Info(err.Error())
+		return "", "", err
+	}
+	err = a.Casher.BlockSession(ctx, user.Email)
 	err = a.Casher.SetSession(ctx, user.Email, tokens.RefreshToken, user.PasswordHash)
+
 	return tokens.AccessToken, tokens.RefreshToken, nil
 
 }
 
 func (a *Auth) Logout(ctx context.Context, userID uuid.UUID) (err error) {
-	err = a.Casher.BlockSession(ctx, userID.String())
+	user, err := a.AuthDB.GetUser(userID)
+
+	if err != nil {
+		return err
+	}
+	err = a.Casher.BlockSession(ctx, user.Email)
+
 	return err
 }
 

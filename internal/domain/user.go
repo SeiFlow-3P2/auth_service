@@ -6,16 +6,15 @@ import (
 )
 
 type User struct {
-	ID           uuid.UUID `authOrm:"primaryKey;not null"`
-	CreatedAt    time.Time `authOrm:"not null"`
-	UpdatedAt    time.Time `authOrm:"not null"`
-	Username     string    `authOrm:"size:255;uniqueIndex;not null"`
-	Email        string    `authOrm:"type:varchar(100);uniqueIndex;not null"`
-	PhotoUrl     string    `authOrm:"size:255;default:null"`
-	TelegramId   uint      `authOrm:"size:11"`
+	ID           uuid.UUID `gorm:"primaryKey;not null"`
+	CreatedAt    time.Time `gorm:"not null"`
+	UpdatedAt    time.Time `gorm:"not null"`
+	Username     string    `gorm:"size:255;uniqueIndex;not null"`
+	Email        string    `gorm:"type:varchar(100);uniqueIndex;not null"`
+	PhotoUrl     string    `gorm:"size:255;default:null"`
+	TelegramId   uint      `gorm:"size:11"`
 	PasswordHash []byte
 }
-
 type UserInfo struct {
 	ID        string
 	Name      string
